@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Trade Flow Dashboard | LixCap</title>
+  <link rel="icon" type="image/png" href="logo.png">
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Leaflet Curve Plugin -->
+  <script src="https://elfalem.github.io/Leaflet.curve/src/leaflet.curve.js"></script>
+
+  <!-- Plotly -->
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+  <!-- PapaParse -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <img src="logo.png" alt="LixCap" class="logo logo-light">
+    <img src="logo-white.png" alt="LixCap" class="logo logo-dark">
+    <div class="title-group">
+      <h1>Trade Flow Dashboard</h1>
+      <span class="subtitle">Advisory & Capital</span>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode">
+      <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+      <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<div class="filters-bar">
+  <div class="filters">
+    <label>
+      <span>Destination</span>
+      <select id="partner"></select>
+    </label>
+
+    <label>
+      <span>Year</span>
+      <select id="year"></select>
+    </label>
+
+    <label>
+      <span>Top N</span>
+      <select id="topn">
+        <option value="5">Top 5</option>
+        <option value="10" selected>Top 10</option>
+        <option value="15">Top 15</option>
+        <option value="20">Top 20</option>
+      </select>
+    </label>
+
+    <label>
+      <span>Value Chain</span>
+      <select id="product"></select>
+    </label>
+
+    <label>
+      <span>Temperature</span>
+      <select id="temp"></select>
+    </label>
+
+    <label>
+      <span>Metric</span>
+      <select id="metric">
+        <option value="value_usd" selected>Value (USD)</option>
+        <option value="quantity_mt">Quantity (MT)</option>
+      </select>
+    </label>
+
+    <button id="reset" class="btn-reset">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+        <path d="M3 3v5h5"></path>
+      </svg>
+      Reset
+    </button>
+  </div>
+</div>
+
+<main class="grid">
+  <section class="card glass map-card">
+    <div id="map"></div>
+  </section>
+  
+  <section class="card glass">
+    <div class="card-header">
+      <h2>Top Exporters</h2>
+    </div>
+    <div id="bar"></div>
+  </section>
+  
+  <section class="card glass">
+    <div class="card-header">
+      <h2>Trend Over Time (Top N Breakdown)</h2>
+    </div>
+    <div id="line"></div>
+  </section>
+</main>
+
+<footer>
+  <span>© 2025 LixCap Advisory & Capital</span>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
