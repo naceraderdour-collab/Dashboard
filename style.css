@@ -112,7 +112,7 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 24px;
+  padding: 8px 20px;
   background: var(--bg-header);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -126,11 +126,11 @@ header {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .logo {
-  height: 45px;
+  height: 38px;
   width: auto;
   transition: var(--transition);
 }
@@ -151,14 +151,14 @@ header {
 }
 
 h1 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
   letter-spacing: -0.5px;
 }
 
 .subtitle {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1.5px;
@@ -173,9 +173,9 @@ h1 {
 
 /* Theme Toggle Button */
 .theme-toggle {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
   color: var(--text-primary);
@@ -207,7 +207,7 @@ h1 {
    FILTERS BAR
    ============================================ */
 .filters-bar {
-  padding: 16px 24px;
+  padding: 12px 20px;
   background: var(--bg-glass);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -218,18 +218,18 @@ h1 {
 .filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
   align-items: flex-end;
 }
 
 .filters label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .filters label span {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -237,21 +237,21 @@ h1 {
 }
 
 .filters select {
-  padding: 10px 14px;
-  font-size: 13px;
+  padding: 8px 12px;
+  font-size: 12px;
   font-family: var(--font-family);
   background: var(--bg-card);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
-  min-width: 140px;
+  min-width: 120px;
   transition: var(--transition);
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23727373' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 36px;
+  background-position: right 10px center;
+  padding-right: 32px;
 }
 
 .filters select:hover {
@@ -297,10 +297,12 @@ h1 {
    ============================================ */
 .grid {
   display: grid;
-  grid-template-columns: 1.6fr 1fr;
-  grid-template-rows: 450px 420px;
-  gap: 20px;
-  padding: 20px 24px;
+  grid-template-columns: 1.5fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 16px;
+  padding: 16px 20px;
+  height: calc(100vh - 140px);
+  min-height: 450px;
 }
 
 /* ============================================
@@ -309,8 +311,8 @@ h1 {
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 20px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 14px;
   transition: var(--transition);
   position: relative;
   overflow: hidden;
@@ -334,11 +336,11 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .card-header h2 {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
   display: flex;
@@ -348,8 +350,8 @@ h1 {
 
 .card-header h2::before {
   content: '';
-  width: 4px;
-  height: 16px;
+  width: 3px;
+  height: 14px;
   background: var(--accent);
   border-radius: 2px;
 }
@@ -581,38 +583,21 @@ footer {
 }
 
 /* ============================================
-   LINE CHART WRAPPER & CONTROLS
+   CHART CONTROLS - Simple toggle only
    ============================================ */
-.line-chart-wrapper {
-  display: flex;
-  flex-direction: column;
-  height: calc(100% - 40px);
-}
-
-.chart-header-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-/* Toggle Switch */
-.toggle-container {
+.header-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.toggle-label {
+  gap: 6px;
+  margin-left: auto;
   font-size: 11px;
-  font-weight: 500;
   color: var(--text-secondary);
 }
 
 .toggle-switch {
   position: relative;
-  width: 40px;
-  height: 22px;
+  width: 36px;
+  height: 20px;
   cursor: pointer;
 }
 
@@ -624,176 +609,44 @@ footer {
 
 .toggle-slider {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--gray-light);
-  border-radius: 22px;
-  transition: var(--transition);
+  inset: 0;
+  background: var(--gray-light);
+  border-radius: 20px;
+  transition: 0.3s;
 }
 
 .toggle-slider:before {
-  position: absolute;
   content: "";
-  height: 16px;
-  width: 16px;
+  position: absolute;
+  width: 14px;
+  height: 14px;
   left: 3px;
   bottom: 3px;
-  background-color: white;
+  background: white;
   border-radius: 50%;
-  transition: var(--transition);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transition: 0.3s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
 .toggle-switch input:checked + .toggle-slider {
-  background-color: var(--lixcap-primary);
+  background: var(--lixcap-primary);
 }
 
 .toggle-switch input:checked + .toggle-slider:before {
-  transform: translateX(18px);
+  transform: translateX(16px);
 }
 
-/* Reset button */
-.btn-zoom-reset {
-  padding: 5px 12px;
-  font-size: 10px;
-  font-weight: 500;
-  background: var(--bg-card);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: var(--transition);
+/* Chart containers */
+#bar, #line {
+  height: calc(100% - 35px);
 }
 
-.btn-zoom-reset:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--accent);
-  color: var(--text-primary);
+/* Plotly modebar styling */
+.modebar {
+  top: 5px !important;
+  right: 5px !important;
 }
 
-/* Chart Area */
-.chart-area {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
-
-.chart-container {
-  flex: 1;
-  min-width: 0;
-}
-
-.chart-container #line {
-  width: 100%;
-  height: 100%;
-}
-
-/* Y-Axis Slider (Left side, parallel to Y axis) */
-.y-slider-container {
-  position: relative;
-  width: 24px;
-  margin-right: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.y-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 6px;
-  background: var(--lixcap-primary);
-  border-radius: 3px;
-  outline: none;
-  cursor: pointer;
-  
-  /* Rotate to vertical */
-  transform: rotate(-90deg);
-  transform-origin: center center;
-  width: 200px;
-  position: absolute;
-}
-
-.y-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  background: white;
-  border: 3px solid var(--lixcap-primary);
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  transition: var(--transition);
-}
-
-.y-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-}
-
-.y-slider::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  background: white;
-  border: 3px solid var(--lixcap-primary);
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
-
-/* X-Axis Slider (Bottom, parallel to X axis) */
-.x-slider-container {
-  position: relative;
-  height: 24px;
-  margin-top: 4px;
-  margin-left: 70px;
-  margin-right: 20px;
-}
-
-.x-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 6px;
-  background: var(--lixcap-primary);
-  border-radius: 3px;
-  outline: none;
-  cursor: pointer;
-}
-
-.x-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  background: white;
-  border: 3px solid var(--lixcap-primary);
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  transition: var(--transition);
-}
-
-.x-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-}
-
-.x-slider::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  background: white;
-  border: 3px solid var(--lixcap-primary);
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
-
-/* Hide custom thumb divs - using native slider thumbs instead */
-.slider-thumb-custom {
-  display: none;
+.modebar-btn {
+  font-size: 14px !important;
 }
