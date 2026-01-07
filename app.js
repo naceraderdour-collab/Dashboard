@@ -176,34 +176,36 @@ function renderLine(filtered, metric, topN) {
     });
   }
 
+  if (showBreakdown) {
   topReporters.forEach((iso3, index) => {
-    const countryData = new Map();
-    allYears.forEach(y => countryData.set(y, 0));
-
-    for (const r of filtered) {
-      if (r.ReporterISO3 !== iso3) continue;
-      const y = String(r.Year);
-      if (!countryData.has(y)) continue;
-      countryData.set(y, (countryData.get(y) || 0) + parseNum(r[metric]));
-    }
-
-    const countryName = (centroids && centroids.get && centroids.get(iso3))
-      ? (centroids.get(iso3).Country || iso3)
-      : iso3;
-
-    traces.push({
-      type: "scatter",
-      mode: "lines",
-      name: countryName,
-      x: allYears,
-      y: allYears.map(y => countryData.get(y) || 0),
-      line: { color: (colors.lines && colors.lines.length) ? colors.lines[index % colors.lines.length] : undefined, width: 1.6, shape: "spline" },
-      hovertemplate: `<b>${countryName}</b><br>%{x}: %{y:,.0f}<extra></extra>`
+      const countryData = new Map();
+      allYears.forEach(y => countryData.set(y, 0));
+  
+      for (const r of filtered) {
+        if (r.ReporterISO3 !== iso3) continue;
+        const y = String(r.Year);
+        if (!countryData.has(y)) continue;
+        countryData.set(y, (countryData.get(y) || 0) + parseNum(r[metric]));
+      }
+  
+      const countryName = (centroids && centroids.get && centroids.get(iso3))
+        ? (centroids.get(iso3).Country || iso3)
+        : iso3;
+  
+      traces.push({
+        type: "scatter",
+        mode: "lines",
+        name: countryName,
+        x: allYears,
+        y: allYears.map(y => countryData.get(y) || 0),
+        line: { color: (colors.lines && colors.lines.length) ? colors.lines[index % colors.lines.length] : undefined, width: 1.6, shape: "spline" },
+        hovertemplate: `<b>${countryName}</b><br>%{x}: %{y:,.0f}<extra></extra>`
+      });
     });
-  });
+}
 
   // Y-axis range: keep it sane and avoid labels spilling outside
-  const maxY = Math.max(...allYears.map(y => totalByYear.get(y) || 0), 1);
+  const maxY = Math.max(1, ...traces.flatMap(t => (t.y || [])));
   const yAxisRange = [0, maxY * 1.08];
 
   Plotly.react("line", traces, {
@@ -260,9 +262,9 @@ function renderLine(filtered, metric, topN) {
 function drawArc(from, to, weight, color) {
   if (typeof L.curve==='function') {
     const midLat=(from.lat+to.lat)/2+Math.abs(from.lon-to.lon)*0.12, midLon=(from.lon+to.lon)/2;
-    return L.curve(["M",[from.lat,from.lon],"Q",[midLat,midLon],[to.lat,to.lon]],{weight,opacity:0.7,color,fill:false});
+    return L.curve(["M",[from.lat,from.lon],"Q",[midLat,midLon],[to.lat,to.lon]],{weight,opacity:0.7,color,fill:false,interactive:false,bubblingMouseEvents:false});
   }
-  return L.polyline([[from.lat,from.lon],[to.lat,to.lon]],{weight,opacity:0.6,color});
+  return L.polyline([[from.lat,from.lon],[to.lat,to.lon]],{weight,opacity:0.6,color,interactive:false,bubblingMouseEvents:false});
 }
 
 function renderMap(partnerISO3, top, metric) {
@@ -290,8 +292,7 @@ function renderMap(partnerISO3, top, metric) {
 
   data.forEach(d=>{
     if(currentAnimationId!==thisId)return;
-    drawArc(d.src,dest,d.lineWeight,colors.primary)
-      .bindTooltip(`<b>${d.src.Country}</b> → ${dest.Country}<br><b>${formatNumber(d.val)}</b> ${metric==="value_usd"?"USD":"MT"}`,{sticky:true}).addTo(layerGroup);
+    drawArc(d.src,dest,d.lineWeight,colors.primary).addTo(layerGroup);
     L.circleMarker([d.src.lat,d.src.lon],{radius:d.radius,weight:2,color:'#fff',fillColor:colors.primary,fillOpacity:0.85})
       .bindTooltip(`<b>${d.src.Country}</b><br><b>${formatNumber(d.val)}</b> ${metric==="value_usd"?"USD":"MT"}`,{sticky:true}).addTo(layerGroup);
   });
@@ -323,20 +324,55 @@ function setupControls() {
   const toggle = document.createElement('div');
   toggle.className = 'header-controls';
   toggle.innerHTML = `
-    <label class="toggle-switch">
-      <input type="checkbox" id="totalToggle" checked>
-      <span class="toggle-slider"></span>
-    </label>
-    <span>Total</span>
-  `;
+    <div class="toggle-item">
+      <label class="toggle-switch">
+        <input type="checkbox" id="totalToggle" checked>
+        <span class="toggle-slider"></span>
+      </label>
+      <span>Total</span>
+    </div>
+    <div class="toggle-item">
+      <label class="toggle-switch">
+        <input type="checkbox" id="breakdownToggle">
+        <span class="toggle-slider"></span>
+      </label>
+      <span>Breakdown (Top N)</span>
+    </div>`;
   header.appendChild(toggle);
   
   // Event listener
-  document.getElementById('totalToggle').addEventListener('change', e => {
-    showTotal = e.target.checked;
+  const totalEl = document.getElementById('totalToggle');
+  const breakdownEl = document.getElementById('breakdownToggle');
+
+  function enforceLineToggles(changed) {
+    const t = !!totalEl.checked;
+    const b = !!breakdownEl.checked;
+
+    if (changed === 'breakdown' && b) totalEl.checked = false;
+    if (changed === 'total' && totalEl.checked) breakdownEl.checked = false;
+
+    // Never allow both OFF
+    if (!totalEl.checked && !breakdownEl.checked) totalEl.checked = true;
+
+    showTotal = !!totalEl.checked;
+    showBreakdown = !!breakdownEl.checked;
+  }
+
+  totalEl.addEventListener('change', () => {
+    enforceLineToggles('total');
     const f = getFilters();
     renderLine(applyFilters(true), f.metric, f.topn);
   });
+
+  breakdownEl.addEventListener('change', () => {
+    enforceLineToggles('breakdown');
+    const f = getFilters();
+    renderLine(applyFilters(true), f.metric, f.topn);
+  });
+
+  // Sync globals once
+  showTotal = !!totalEl.checked;
+  showBreakdown = !!breakdownEl.checked;
 }
 
 function updateChart() {
@@ -395,8 +431,9 @@ async function main() {
 
     els.reset.addEventListener("click", () => {
       els.partner.value=partners[0]||""; els.year.value=""; els.product.value=""; els.temp.value="";
-      els.topn.value="10"; els.metric.value="value_usd"; showTotal=true;
+      els.topn.value="10"; els.metric.value="value_usd"; showTotal=true; showBreakdown=false;
       const t=document.getElementById('totalToggle'); if(t)t.checked=true;
+      const b=document.getElementById('breakdownToggle'); if(b)b.checked=false;
       rerender();
     });
 
