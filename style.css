@@ -588,12 +588,19 @@ footer {
 .header-controls {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 14px;
   margin-left: auto;
   font-size: 11px;
   color: var(--text-secondary);
 }
 
+
+
+.toggle-item{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
 .toggle-switch {
   position: relative;
   width: 36px;
