@@ -1,5 +1,5 @@
-// app.js - LixCap Trade Flow Dashboard v10
-// X rangeslider (Plotly) + Y slider (custom), legend below
+// app.js - LixCap Trade Flow Dashboard v11
+// Improved range slider + USA imports card
 
 const FLOWS_URL = "data/flows_agg.csv";
 const CENTROIDS_URL = "data/Country_Centroid.ISO.with_xy.csv";
@@ -33,7 +33,7 @@ const els = {
 };
 
 let flows = [], centroids = new Map(), map, layerGroup, tileLayer;
-let currentTheme = 'light', currentAnimationId = 0, showTotal = true;
+let currentTheme = 'light', currentAnimationId = 0, showTotal = true, showBreakdown = false;
 let dataMaxValue = 0;
 
 // Theme
@@ -63,6 +63,9 @@ function formatNumber(n) {
   if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
   if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
   return n.toFixed(0);
+}
+function formatNumberFull(n) {
+  return new Intl.NumberFormat('en-US').format(Math.round(n));
 }
 function loadCSV(url) {
   return fetch(url).then(r => r.ok ? r.text() : Promise.reject(url))
@@ -105,6 +108,45 @@ function topNReporters(filtered, metric, n) {
   return [...m.entries()].filter(d=>d[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,n);
 }
 
+// Get USA ranking and value
+function getUSAData(filtered, metric) {
+  const m = new Map();
+  filtered.forEach(r => { 
+    if(r.ReporterISO3) m.set(r.ReporterISO3, (m.get(r.ReporterISO3)||0)+parseNum(r[metric])); 
+  });
+  const sorted = [...m.entries()].filter(d=>d[1]>0).sort((a,b)=>b[1]-a[1]);
+  const usaIndex = sorted.findIndex(d => d[0] === 'USA');
+  const usaValue = m.get('USA') || 0;
+  return {
+    rank: usaIndex >= 0 ? usaIndex + 1 : null,
+    value: usaValue,
+    total: sorted.length
+  };
+}
+
+// Update USA Card
+function updateUSACard() {
+  const f = getFilters();
+  const filtered = applyFilters(false);
+  const usaData = getUSAData(filtered, f.metric);
+  
+  const valueEl = document.getElementById('usaValue');
+  const rankEl = document.getElementById('usaRank');
+  const unitEl = document.getElementById('usaUnit');
+  
+  if (valueEl && rankEl && unitEl) {
+    if (usaData.value > 0) {
+      valueEl.textContent = formatNumber(usaData.value);
+      rankEl.textContent = usaData.rank ? `Rank #${usaData.rank} of ${usaData.total}` : 'Not ranked';
+      unitEl.textContent = f.metric === 'value_usd' ? 'USD' : 'MT';
+    } else {
+      valueEl.textContent = 'N/A';
+      rankEl.textContent = 'No imports from USA';
+      unitEl.textContent = f.metric === 'value_usd' ? 'USD' : 'MT';
+    }
+  }
+}
+
 // Bar Chart
 function renderBar(top, metric) {
   const theme = getTheme(), colors = COLORS[theme];
@@ -127,7 +169,7 @@ function renderBar(top, metric) {
   }, {displayModeBar:false, responsive:true});
 }
 
-// Line Chart - Clean design, scroll to zoom
+// Line Chart - Clean design with custom range slider
 function renderLine(filtered, metric, topN) {
   const theme = getTheme();
   const colors = COLORS[theme];
@@ -162,22 +204,21 @@ function renderLine(filtered, metric, topN) {
   // Build traces
   const traces = [];
 
-  // NOTE: v13 has showTotal toggle in some versions; if it exists, respect it, else show total.
-  const _showTotal = (typeof showTotal !== "undefined") ? showTotal : true;
-  if (_showTotal) {
+  if (showTotal) {
     traces.push({
       type: "scatter",
-      mode: "lines",
+      mode: "lines+markers",
       name: "TOTAL",
       x: allYears,
       y: allYears.map(y => totalByYear.get(y) || 0),
-      line: { color: colors.total || colors.accent || "#5cc8ff", width: 4, shape: "spline" },
+      line: { color: colors.total || colors.accent || "#5cc8ff", width: 3, shape: "spline" },
+      marker: { size: 6, color: colors.total },
       hovertemplate: `<b>TOTAL</b><br>%{x}: %{y:,.0f}<extra></extra>`
     });
   }
 
   if (showBreakdown) {
-  topReporters.forEach((iso3, index) => {
+    topReporters.forEach((iso3, index) => {
       const countryData = new Map();
       allYears.forEach(y => countryData.set(y, 0));
   
@@ -194,22 +235,23 @@ function renderLine(filtered, metric, topN) {
   
       traces.push({
         type: "scatter",
-        mode: "lines",
+        mode: "lines+markers",
         name: countryName,
         x: allYears,
         y: allYears.map(y => countryData.get(y) || 0),
-        line: { color: (colors.lines && colors.lines.length) ? colors.lines[index % colors.lines.length] : undefined, width: 1.6, shape: "spline" },
+        line: { color: (colors.lines && colors.lines.length) ? colors.lines[index % colors.lines.length] : undefined, width: 2, shape: "spline" },
+        marker: { size: 5 },
         hovertemplate: `<b>${countryName}</b><br>%{x}: %{y:,.0f}<extra></extra>`
       });
     });
-}
+  }
 
-  // Y-axis range: keep it sane and avoid labels spilling outside
+  // Y-axis range
   const maxY = Math.max(1, ...traces.flatMap(t => (t.y || [])));
-  const yAxisRange = [0, maxY * 1.08];
+  const yAxisRange = [0, maxY * 1.1];
 
   Plotly.react("line", traces, {
-    margin: { l: 70, r: 20, t: 10, b: 140 },
+    margin: { l: 60, r: 15, t: 10, b: 55 },
     paper_bgcolor: colors.paper,
     plot_bgcolor: colors.paper,
     font: { color: colors.text, size: 11, family: "Inter, sans-serif" },
@@ -220,28 +262,30 @@ function renderLine(filtered, metric, topN) {
       gridcolor: colors.grid,
       zerolinecolor: colors.grid,
       tickfont: { size: 10 },
-      automargin: true,
-
-      // ✅ This matches your “cut the data when I move the circle” behavior (rangeslider).
-      rangeslider: { visible: true, thickness: 0.10, bgcolor: colors.paper, bordercolor: colors.grid },
-
-      // Disable zoom-by-scroll/drag vibe; keep interactions simple
-      fixedrange: false
+      automargin: false,
+      fixedrange: false,
+      rangeslider: {
+        visible: true,
+        thickness: 0.08,
+        bgcolor: theme === 'dark' ? 'rgba(15, 72, 120, 0.2)' : 'rgba(15, 72, 120, 0.1)',
+        bordercolor: colors.primary,
+        borderwidth: 1
+      }
     },
 
     yaxis: {
-      title: { text: metric === "value_usd" ? "USD" : "MT", standoff: 8 },
+      title: { text: metric === "value_usd" ? "USD" : "MT", standoff: 5, font: { size: 10 } },
       gridcolor: colors.grid,
       zerolinecolor: colors.grid,
       range: yAxisRange,
       automargin: true,
       tickfont: { size: 10 },
-      tickformat: metric === "value_usd" ? "~s" : "~s"
+      tickformat: "~s"
     },
 
     legend: {
       orientation: "h",
-      y: -0.62,
+      y: -0.32,
       yanchor: "top",
       x: 0.5,
       xanchor: "center",
@@ -288,7 +332,7 @@ function renderMap(partnerISO3, top, metric) {
   });
 
   L.circleMarker([dest.lat,dest.lon],{radius:12,weight:3,color:'#fff',fillColor:colors.target,fillOpacity:0.95})
-    .bindTooltip(`<b>Destination: ${dest.Country}</b>`,{permanent:true,direction:'bottom'}).addTo(layerGroup);
+    .bindTooltip(`<b>Importer: ${dest.Country}</b>`,{permanent:true,direction:'bottom'}).addTo(layerGroup);
 
   data.forEach(d=>{
     if(currentAnimationId!==thisId)return;
@@ -301,7 +345,7 @@ function renderMap(partnerISO3, top, metric) {
   const legend=document.createElement('div');
   legend.className='map-legend';
   legend.innerHTML=`
-    <div class="legend-title">Export Volume</div>
+    <div class="legend-title">Import flow</div>
     <div class="legend-items">
       <div class="legend-item"><svg width="40" height="40"><circle cx="20" cy="20" r="19" fill="${colors.primary}" fill-opacity="0.85" stroke="white" stroke-width="2"/></svg><span>${formatNumber(maxVal)}</span></div>
       <div class="legend-item"><svg width="40" height="40"><circle cx="20" cy="20" r="12" fill="${colors.primary}" fill-opacity="0.85" stroke="white" stroke-width="2"/></svg><span>${formatNumber(maxVal*0.25)}</span></div>
@@ -313,14 +357,13 @@ function renderMap(partnerISO3, top, metric) {
   map.flyToBounds(L.latLngBounds(boundsPts).pad(0.15),{duration:0.8,easeLinearity:0.25});
 }
 
-// Setup controls - just toggle, no sliders
+// Setup controls
 function setupControls() {
   const card = document.querySelector('.card:has(#line)');
   if (!card || document.getElementById('totalToggle')) return;
   
   const header = card.querySelector('.card-header');
   
-  // Add toggle to header
   const toggle = document.createElement('div');
   toggle.className = 'header-controls';
   toggle.innerHTML = `
@@ -340,7 +383,6 @@ function setupControls() {
     </div>`;
   header.appendChild(toggle);
   
-  // Event listener
   const totalEl = document.getElementById('totalToggle');
   const breakdownEl = document.getElementById('breakdownToggle');
 
@@ -351,7 +393,6 @@ function setupControls() {
     if (changed === 'breakdown' && b) totalEl.checked = false;
     if (changed === 'total' && totalEl.checked) breakdownEl.checked = false;
 
-    // Never allow both OFF
     if (!totalEl.checked && !breakdownEl.checked) totalEl.checked = true;
 
     showTotal = !!totalEl.checked;
@@ -370,14 +411,8 @@ function setupControls() {
     renderLine(applyFilters(true), f.metric, f.topn);
   });
 
-  // Sync globals once
   showTotal = !!totalEl.checked;
   showBreakdown = !!breakdownEl.checked;
-}
-
-function updateChart() {
-  const f = getFilters();
-  renderLine(applyFilters(true), f.metric, f.topn);
 }
 
 // Main render
@@ -387,9 +422,27 @@ function rerender() {
   const top = topNReporters(filteredBar, f.metric, f.topn);
   const filteredLine = applyFilters(true);
 
+  // Titles
+  const importerName = (f.partner && centroids.get(f.partner)) ? centroids.get(f.partner).Country : (f.partner || "Importer");
+  const metricLabel = f.metric === "value_usd" ? "Value (USD)" : "Quantity (MT)";
+  const topLabel = `Top ${f.topn}`;
+
+  const mapTitleEl = document.getElementById("mapTitle");
+  if (mapTitleEl) {
+    mapTitleEl.textContent = f.partner
+      ? `${topLabel} Export Sources to ${importerName} — ${metricLabel}`
+      : `Top Export Sources — ${metricLabel}`;
+  }
+  const barTitleEl = document.getElementById("barTitle");
+  if (barTitleEl) barTitleEl.textContent = f.partner ? `${topLabel} Exporters to ${importerName}` : `${topLabel} Exporters`;
+
+  const lineTitleEl = document.getElementById("lineTitle");
+  if (lineTitleEl) lineTitleEl.textContent = f.partner ? `Imports to ${importerName} Over Time — ${metricLabel}` : `Over Time — ${metricLabel}`;
+
   renderBar(top, f.metric);
   setupControls();
   renderLine(filteredLine, f.metric, f.topn);
+  updateUSACard();
 
   if (f.partner) {
     renderMap(f.partner, top, f.metric);
